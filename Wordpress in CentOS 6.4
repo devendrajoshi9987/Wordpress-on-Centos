@@ -1,0 +1,194 @@
+Install Wordpress in CentOS 6.4
+
+
+----------------------------------------------------------------------------------------
+1) Stop unwamted Services or settings
+----------------------------------------------------------------------------------------
+# /etc/init.d/NetworkManager stop
+# chkconfig NetworkManager off
+Note: Make sure you have configured Network i.e. (IP Address/Netmask/Gateway/DNS)
+
+# /etc/init.d/sendmail stop
+# chkconfig sendmail off
+# vi /etc/sysconfig/selinux
+SELINUX=disabled
+
+----------------------------------------------------------------------------------------
+2) Open Necessary Ports in iptables
+----------------------------------------------------------------------------------------
+#vi /etc/sysconfig/iptables
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+
+#/etc/init.d/iptables restart
+#chkconfig iptables on
+
+----------------------------------------------------------------------------------------
+3) Install Require Packages and dependencies and verify 
+----------------------------------------------------------------------------------------
+
+#yum install mysql mysql-server httpd php php-mbstring php-mysql php-gd php-imap php-ldap php-odbc php-pear php-xml php-xmlrpc wget unzip
+#yum install php-common php-pecl-apcu php-cli php-pear php-pdo php-mysqlnd php-pgsql php-pecl-mongo php-sqlite php-pecl-memcache php-pecl-memcached php-gd php-mbstring php-mcrypt php-xml
+#yum install php-pecl-apcu php-cli php-pear php-pdo php-mysqlnd php-pgsql php-pecl-mongo php-sqlite php-pecl-memcache php-pecl-memcached php-gd php-mbstring php-mcrypt php-xml
+
+
+----------------------------------------------------------------------------------------
+4) Configure mysql database and user
+----------------------------------------------------------------------------------------
+#/etc/init.d/mysqld start
+#chkconfig mysqld on
+#mysqladmin -u root password Admin@123
+#mysql -u root -p
+
+## Create new user ##
+CREATE USER wordpress@localhost IDENTIFIED BY "Admin@123";
+ 
+## Create new database ##
+CREATE DATABASE wordpress_blog;
+ 
+## Grant needed permissions ##
+GRANT ALL ON wordpress_blog.* TO wordpress@localhost;
+ 
+## Flush privileges ##
+FLUSH PRIVILEGES;
+ 
+## Exit ##
+exit
+
+
+----------------------------------------------------------------------------------------
+5) Compile Apache
+----------------------------------------------------------------------------------------
+
+#yum install gcc-c++ ncurses-devel gcc zlib zlib-devel openssl openssl-devel
+
+
+#/etc/init.d/httpd stop
+#chkconfig httpd off
+
+#cd /softwares/
+#wget http://archive.apache.org/dist/httpd/httpd-2.2.25.tar.gz
+#tar -zxvf httpd-2.2.25.tar.gz
+#cd httpd-2.2.25
+
+#./configure  --prefix=/opt/apache
+#make
+#make install
+
+#rm -rf /softwares/httpd-2.2.25
+
+
+
+
+#vi /opt/apache/conf/httpd.conf
+
+
+############## Apache Setting ##############
+Listen 80
+User apache
+Group apache
+Include conf/php.conf
+
+<VirtualHost *:80>
+    ServerAdmin devendra.joshi9987@gmail.com
+    DocumentRoot "/opt/wordpress/"
+    ServerName blog.deva.com
+    ServerAlias blog.deva.com
+    <Directory "/opt/wordpress/">
+        Options Indexes FollowSymLinks Includes ExecCGI
+        Order allow,deny
+        Allow from all
+    </Directory>
+</VirtualHost>
+
+############## Apache Setting ##############
+
+
+#cp /etc/httpd/modules/libphp5* /opt/apache/modules/
+#cp /etc/httpd/conf.d/php.conf /opt/apache/conf/
+#/opt/apache/bin/apachectl -k restart
+
+#lsof -i :80
+
+
+
+----------------------------------------------------------------------------------------
+6) Download & Extracting WordPress 3.8
+----------------------------------------------------------------------------------------
+# mkdir /softwares
+# cd /softwares
+# wget http://wordpress.org/latest.tar.gz
+# tar -xvzf latest.tar.gz -C /opt/
+
+# chown -R apache.apache /opt/wordpress/
+# chmod -R 755 /opt/wordpress/
+
+
+----------------------------------------------------------------------------------------
+7) Next, restart the Apache service to reflect changes.
+----------------------------------------------------------------------------------------
+
+#/opt/apache/bin/apachectl -k restart
+
+#lsof -i :80
+
+
+----------------------------------------------------------------------------------------
+8) Add the following line to /etc/hosts file.
+----------------------------------------------------------------------------------------
+#vi /etc/hosts
+
+127.0.0.1  wordpress.deva.com
+
+
+----------------------------------------------------------------------------------------
+9) Configuring WordPress Installation
+----------------------------------------------------------------------------------------
+
+Copy default wp-config-sample.php to wp-config.php to configure WordPress installation.
+
+# cd /opt/wordpress
+# cp wp-config-sample.php wp-config.php
+
+
+
+# chown -R apache.apache /opt/wordpress/
+
+----------------------------------------------------------------------------------------
+10) Open wp-config.php file & Modify the following database settings as we created in the Step #3 above.
+----------------------------------------------------------------------------------------
+
+# vi wp-config.php
+
+
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define('DB_NAME', 'wordpress');
+
+/** MySQL database username */
+define('DB_USER', 'wordpress');
+
+/** MySQL database password */
+define('DB_PASSWORD', 'wordpress');
+
+/** MySQL hostname */
+define('DB_HOST', 'localhost');
+
+/** Database Charset to use in creating database tables. */
+define('DB_CHARSET', 'utf8');
+
+/** The Database Collate type. Don't change this if in doubt. */
+define('DB_COLLATE', '');
+
+
+----------------------------------------------------------------------------------------
+11) Finishing WordPress Installation
+----------------------------------------------------------------------------------------
+
+Open your browser and type any of the following address.
+
+http://wordpress/
+
+http://localhost
+
+
+http://your-ip
